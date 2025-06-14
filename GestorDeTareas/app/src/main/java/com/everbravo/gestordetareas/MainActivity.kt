@@ -3,10 +3,11 @@ package com.everbravo.gestordetareas
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ListView
 import androidx.activity.ComponentActivity
+import com.everbravo.gestordetareas.adapters.TaskAdapter
+import com.everbravo.gestordetareas.persistence.dao.TaskDao
 import org.json.JSONArray
 
 /**
@@ -23,11 +24,7 @@ class MainActivity : ComponentActivity() {
     /** ListView used to display the list of tasks. */
     private lateinit var listView: ListView
 
-    /** Adapter to bind the task list to the ListView. */
-    private lateinit var adapter: ArrayAdapter<String>
-
-    /** Mutable list of task descriptions to be shown in the UI. */
-    private val taskList = mutableListOf<String>()
+    private lateinit var tasksJsonArray: JSONArray
 
     /**
      * Called when the activity is first created.
@@ -42,14 +39,20 @@ class MainActivity : ComponentActivity() {
 
         listView = findViewById(R.id.listTasks)
         val btnAddTask = findViewById<Button>(R.id.btnAddTask)
+        val btnEndSession = findViewById<Button>(R.id.btnEndSession)
 
-        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, taskList)
-        listView.adapter = adapter
-
+        // Ir a formulario
         btnAddTask.setOnClickListener {
             startActivity(Intent(this, FormActivity::class.java))
         }
+
+        // Volver a login
+        btnEndSession.setOnClickListener {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+        }
     }
+
 
     /**
      * Called when the activity becomes visible to the user.
@@ -65,30 +68,21 @@ class MainActivity : ComponentActivity() {
      * Clears the current list, reads the JSON array, and updates the ListView.
      */
     private fun loadTasks() {
-        taskList.clear()
-        val sharedPreferences = getSharedPreferences("Tasks", Context.MODE_PRIVATE)
-        val json = sharedPreferences.getString("task_list", "[]")
-        val jsonArray = JSONArray(json)
+        val taskDao = TaskDao(this)
+        val tasks = taskDao.getAllTasks()
 
-        for (i in 0 until jsonArray.length()) {
-            val task = jsonArray.getJSONObject(i)
-            val name = task.getString("name")
-            val description = task.getString("description")
-            taskList.add("Title: $name\nSummary: $description")
-        }
+        val adapter = TaskAdapter(this, JSONArray().apply {
+            tasks.forEach {
+                put(org.json.JSONObject().apply {
+                    put("name", it.name)
+                    put("description", it.description)
+                    put("latitude", it.latitude)
+                    put("longitude", it.longitude)
+                })
+            }
+        })
 
-        adapter.notifyDataSetChanged()
-    }
-
-    /**
-     * Called when the activity is no longer visible to the user.
-     * This method clears the saved task list from SharedPreferences
-     * to ensure that the task list is deleted when the activity stops.
-     */
-    override fun onStop() {
-        super.onStop()
-        val sharedPreferences = getSharedPreferences("Tasks", Context.MODE_PRIVATE)
-        sharedPreferences.edit().remove("task_list").apply()
+        listView.adapter = adapter
     }
 
 }

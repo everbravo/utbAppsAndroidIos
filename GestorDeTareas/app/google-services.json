@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "993010178915",
+    "project_id": "logincool-bd00b",
+    "storage_bucket": "logincool-bd00b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:993010178915:android:9b615b2b85e1ce40d81156",
+        "android_client_info": {
+          "package_name": "com.everbravo.gestordetareas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBESw0RA1p-oGvP7crSzJOTULdM2YKfZz8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

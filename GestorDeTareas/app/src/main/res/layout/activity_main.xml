@@ -3,25 +3,46 @@
 android:layout_width="match_parent"
 android:layout_height="match_parent"
 android:orientation="vertical"
+    android:gravity="center_vertical|center_horizontal"
 android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/imgLogo"
+        android:layout_width="72dp"
+        android:layout_height="77dp"
+        android:contentDescription="Logo de la app"
+        android:src="@drawable/logo" />
+
 <TextView
     android:id="@+id/tvTitle"
+    style="@style/EditTextStyle"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:text="Gestor de Tareas"
     android:textSize="24sp"
     android:textStyle="bold"
     android:gravity="center"/>
-<Button
-    android:id="@+id/btnAddTask"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:text="Agregar Nueva Tarea"
-    android:layout_marginTop="20dp"/>
 
     <ListView
         android:id="@+id/listTasks"
+        style="@style/EditTextStyle"
         android:layout_width="match_parent"
-        android:layout_height="565dp"
+        android:layout_height="314dp"
         android:layout_marginTop="20dp" />
+
+    <Button
+        android:id="@+id/btnAddTask"
+        style="@style/ButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Agregar Nueva Tarea" />
+
+    <Button
+        android:id="@+id/btnEndSession"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_gravity="center"
+        android:text="Cerrar sesión" />
 </LinearLayout>

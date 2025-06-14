@@ -14,28 +14,31 @@
         android:src="@drawable/logo" />
 
     <EditText
-        android:id="@+id/etTaskName"
+        android:id="@+id/etEmail"
         style="@style/EditTextStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Nombre de la tarea"/>
+        android:hint="Correo electrónico"
+        android:inputType="textEmailAddress" />
+
     <EditText
-        android:id="@+id/etTaskDescription"
+        android:id="@+id/etPassword"
         style="@style/EditTextStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Descripción"
-        android:inputType="textMultiLine"/>
+        android:hint="Contraseña"
+        android:inputType="textPassword" />
+
     <Button
-        android:id="@+id/btnSaveTask"
+        android:id="@+id/btnLogin"
         style="@style/ButtonStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Guardar"/>
+        android:text="Iniciar sesión" />
 
     <Button
-        android:id="@+id/btnBack"
-        android:layout_width="197dp"
+        android:id="@+id/btnGoToRegister"
+        android:layout_width="219dp"
         android:layout_height="wrap_content"
-        android:text="Volver" />
+        android:text="Registrarse" />
 </LinearLayout>

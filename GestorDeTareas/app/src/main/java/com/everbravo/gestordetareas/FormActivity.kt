@@ -1,31 +1,26 @@
 package com.everbravo.gestordetareas
 
+import android.Manifest
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.core.app.ActivityCompat
+import com.everbravo.gestordetareas.persistence.dao.TaskDao
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import org.json.JSONArray
 import org.json.JSONObject
 
-/**
- * FormActivity allows the user to input and save a new task.
- * It includes fields for the task name and description, and buttons to save the task or go back.
- *
- * The task is stored in SharedPreferences as a JSON array. Each new task is appended to the existing list.
- *
- * @author Ever Bravo
- * @version 1.0
- */
 class FormActivity : ComponentActivity() {
 
-    /**
-     * Called when the activity is starting. Initializes the layout, input fields,
-     * and buttons for saving or canceling task creation.
-     *
-     * @param savedInstanceState the previously saved state of the activity, if any
-     */
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_form)
@@ -37,33 +32,36 @@ class FormActivity : ComponentActivity() {
 
         val sharedPreferences: SharedPreferences = getSharedPreferences("Tasks", Context.MODE_PRIVATE)
 
-        /**
-         * Saves the entered task to SharedPreferences as a JSON object.
-         * Appends the new task to the existing task list and finishes the activity.
-         */
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        val taskDao = TaskDao(this)
+
         btnSaveTask.setOnClickListener {
             val name = etTaskName.text.toString()
             val description = etTaskDescription.text.toString()
 
-            val taskJson = sharedPreferences.getString("task_list", "[]")
-            val taskArray = JSONArray(taskJson)
+            // Verifica permisos
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
 
-            val newTask = JSONObject()
-            newTask.put("name", name)
-            newTask.put("description", description)
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 100)
+                Toast.makeText(this, "Permiso de ubicación requerido", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-            taskArray.put(newTask)
+            // Obtiene ubicación actual
+            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+                val latitude = location?.latitude ?: 0.0
+                val longitude = location?.longitude ?: 0.0
 
-            sharedPreferences.edit()
-                .putString("task_list", taskArray.toString())
-                .apply()
+                taskDao.insertTask(name, description, latitude, longitude)
 
-            finish()
+                Toast.makeText(this, "Tarea guardada con ubicación", Toast.LENGTH_SHORT).show()
+                finish()
+            }.addOnFailureListener {
+                Toast.makeText(this, "Error al obtener ubicación", Toast.LENGTH_SHORT).show()
+            }
         }
 
-        /**
-         * Finishes the activity and returns to the previous screen without saving.
-         */
         btnBack.setOnClickListener {
             finish()
         }
