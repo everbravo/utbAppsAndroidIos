@@ -1,14 +1,13 @@
 package com.everbravo.gestordetareas
 
-import android.annotation.SuppressLint
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
-import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.FirebaseAuth
+import androidx.appcompat.app.AppCompatActivity
+import com.everbravo.gestordetareas.utils.HashUtils
+import com.everbravo.gestordetareas.utils.SecuredPrefs
 
 class LoginActivity : AppCompatActivity() {
 
@@ -16,44 +15,67 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var etPassword: EditText
     private lateinit var btnLogin: Button
     private lateinit var btnRegister: Button
-    private lateinit var firebaseAuth: FirebaseAuth
 
-    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
-        FirebaseApp.initializeApp(this)
 
-        firebaseAuth = FirebaseAuth.getInstance()
+        initViews()
+        initListeners()
+    }
 
-        // Referencias a los componentes del layout
+    private fun initViews() {
         etEmail = findViewById(R.id.etEmail)
         etPassword = findViewById(R.id.etPassword)
         btnLogin = findViewById(R.id.btnLogin)
         btnRegister = findViewById(R.id.btnGoToRegister)
+    }
 
-        btnLogin.setOnClickListener {
-            val email = etEmail.text.toString()
-            val password = etPassword.text.toString()
+    private fun initListeners() {
+        btnLogin.setOnClickListener { handleLogin() }
+        btnRegister.setOnClickListener { goToRegister() }
+    }
 
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Por favor ingresa todos los campos", Toast.LENGTH_SHORT).show()
-            } else {
-                firebaseAuth.signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(this) { task ->
-                        if (task.isSuccessful) {
-                            Toast.makeText(this, "Bienvenido", Toast.LENGTH_SHORT).show()
-                            startActivity(Intent(this, MainActivity::class.java))
-                        } else {
-                            Toast.makeText(this, "Error al iniciar sesión: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-                        }
-                    }
-            }
+    private fun handleLogin() {
+        val email = etEmail.text.toString().trim()
+        val password = etPassword.text.toString().trim()
+
+        if (!validateInputs(email, password)) return
+
+        val sharedPrefs = SecuredPrefs.getSecurePrefs(applicationContext)
+        val savedEmail = sharedPrefs.getString("email", null)
+        val savedPassword = sharedPrefs.getString("password", null)
+        val hashedInput = HashUtils.sha256(password)
+
+        if (email == savedEmail && hashedInput == savedPassword) {
+            sharedPrefs.edit().putBoolean("isLoggedIn", true).apply()
+            Toast.makeText(this, "Bienvenido", Toast.LENGTH_SHORT).show()
+            goToMain()
+        } else {
+            Toast.makeText(this, "Credenciales incorrectas", Toast.LENGTH_SHORT).show()
         }
+    }
 
-        // Navegar a la pantalla de registro
-        btnRegister.setOnClickListener {
-            startActivity(Intent(this, RegisterActivity::class.java))
+    private fun validateInputs(email: String, password: String): Boolean {
+        return if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Por favor ingresa todos los campos", Toast.LENGTH_SHORT).show()
+            false
+        } else {
+            true
         }
+    }
+
+    private fun goToMain() {
+        startActivity(Intent(this, MainActivity::class.java))
+        finish()
+    }
+
+    private fun goToRegister() {
+        startActivity(Intent(this, RegisterActivity::class.java))
+    }
+
+    override fun onPause() {
+        super.onPause()
+        finish()
     }
 }

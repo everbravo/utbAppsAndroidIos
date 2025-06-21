@@ -1,88 +1,90 @@
 package com.everbravo.gestordetareas
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ListView
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import com.everbravo.gestordetareas.adapters.TaskAdapter
 import com.everbravo.gestordetareas.persistence.dao.TaskDao
+import com.everbravo.gestordetareas.utils.SecuredPrefs
 import org.json.JSONArray
+import org.json.JSONObject
 
-/**
- * MainActivity is the entry point of the Task Manager app.
- * It displays a list of saved tasks and provides a button to add new ones.
- *
- * Tasks are stored in SharedPreferences in JSON format and loaded every time the activity resumes.
- *
- * @author Ever Bravo
- * @version 1.0
- */
 class MainActivity : ComponentActivity() {
 
-    /** ListView used to display the list of tasks. */
     private lateinit var listView: ListView
+    private lateinit var btnAddTask: Button
+    private lateinit var btnEndSession: Button
 
-    private lateinit var tasksJsonArray: JSONArray
-
-    /**
-     * Called when the activity is first created.
-     * Sets up the layout, initializes the ListView and adapter,
-     * and configures the Add Task button to launch FormActivity.
-     *
-     * @param savedInstanceState the previously saved state of the activity, if any
-     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        listView = findViewById(R.id.listTasks)
-        val btnAddTask = findViewById<Button>(R.id.btnAddTask)
-        val btnEndSession = findViewById<Button>(R.id.btnEndSession)
+        if (!isSessionActive()) {
+            redirectToLogin("Sesión no válida. Inicia sesión nuevamente.")
+            return
+        }
 
-        // Ir a formulario
+        initViews()
+        initListeners()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!isSessionActive()) {
+            redirectToLogin("Sesión finalizada. Inicia sesión nuevamente.")
+        } else {
+            loadTasks()
+        }
+    }
+
+    private fun initViews() {
+        listView = findViewById(R.id.listTasks)
+        btnAddTask = findViewById(R.id.btnAddTask)
+        btnEndSession = findViewById(R.id.btnEndSession)
+    }
+
+    private fun initListeners() {
         btnAddTask.setOnClickListener {
             startActivity(Intent(this, FormActivity::class.java))
         }
 
-        // Volver a login
         btnEndSession.setOnClickListener {
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
+            SecuredPrefs.getSecurePrefs(applicationContext)
+                .edit()
+                .putBoolean("isLoggedIn", false)
+                .apply()
+            redirectToLogin("Sesión cerrada correctamente.")
         }
     }
 
-
-    /**
-     * Called when the activity becomes visible to the user.
-     * Reloads the task list from SharedPreferences.
-     */
-    override fun onResume() {
-        super.onResume()
-        loadTasks()
+    private fun isSessionActive(): Boolean {
+        return SecuredPrefs.checkSession(applicationContext)
     }
 
-    /**
-     * Loads the list of tasks from SharedPreferences.
-     * Clears the current list, reads the JSON array, and updates the ListView.
-     */
+    private fun redirectToLogin(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        startActivity(Intent(this, LoginActivity::class.java))
+        finish()
+    }
+
     private fun loadTasks() {
         val taskDao = TaskDao(this)
         val tasks = taskDao.getAllTasks()
 
-        val adapter = TaskAdapter(this, JSONArray().apply {
+        val jsonArray = JSONArray().apply {
             tasks.forEach {
-                put(org.json.JSONObject().apply {
+                put(JSONObject().apply {
                     put("name", it.name)
                     put("description", it.description)
                     put("latitude", it.latitude)
                     put("longitude", it.longitude)
                 })
             }
-        })
+        }
 
-        listView.adapter = adapter
+        listView.adapter = TaskAdapter(this, jsonArray)
     }
-
 }
