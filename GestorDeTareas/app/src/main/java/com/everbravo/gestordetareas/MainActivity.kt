@@ -9,6 +9,8 @@ import androidx.activity.ComponentActivity
 import com.everbravo.gestordetareas.adapters.TaskAdapter
 import com.everbravo.gestordetareas.persistence.dao.TaskDao
 import com.everbravo.gestordetareas.utils.SecuredPrefs
+import com.everbravo.gestordetareas.utils.ToastManager
+import com.everbravo.gestordetareas.utils.enums.ValidationResult
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -23,7 +25,7 @@ class MainActivity : ComponentActivity() {
         setContentView(R.layout.activity_main)
 
         if (!isSessionActive()) {
-            redirectToLogin("Sesión no válida. Inicia sesión nuevamente.")
+            redirectToLogin(ValidationResult.SESSION_ERROR)
             return
         }
 
@@ -34,7 +36,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         if (!isSessionActive()) {
-            redirectToLogin("Sesión finalizada. Inicia sesión nuevamente.")
+            redirectToLogin(ValidationResult.SESSION_ERROR)
         } else {
             loadTasks()
         }
@@ -56,7 +58,7 @@ class MainActivity : ComponentActivity() {
                 .edit()
                 .putBoolean("isLoggedIn", false)
                 .apply()
-            redirectToLogin("Sesión cerrada correctamente.")
+            redirectToLogin(ValidationResult.SESSION_ERROR)
         }
     }
 
@@ -64,8 +66,8 @@ class MainActivity : ComponentActivity() {
         return SecuredPrefs.checkSession(applicationContext)
     }
 
-    private fun redirectToLogin(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    private fun redirectToLogin(validationResult: ValidationResult) {
+        ToastManager.showMeAToast(this, validationResult)
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
     }

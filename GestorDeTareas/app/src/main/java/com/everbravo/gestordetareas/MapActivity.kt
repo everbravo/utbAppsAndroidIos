@@ -6,6 +6,8 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.everbravo.gestordetareas.utils.SecuredPrefs
+import com.everbravo.gestordetareas.utils.ToastManager
+import com.everbravo.gestordetareas.utils.enums.ValidationResult
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -23,8 +25,9 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onCreate(savedInstanceState)
 
         if (!isSessionActive()) {
-            redirectToLogin("No permitido")
-            return
+            ToastManager.showMeAToast(this, ValidationResult.SESSION_ERROR)
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
         }
 
         setContentView(R.layout.activity_map)
@@ -35,12 +38,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun isSessionActive(): Boolean {
         return SecuredPrefs.checkSession(applicationContext)
-    }
-
-    private fun redirectToLogin(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-        startActivity(Intent(this, LoginActivity::class.java))
-        finish()
     }
 
     private fun extractIntentData() {

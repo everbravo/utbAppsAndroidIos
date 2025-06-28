@@ -13,6 +13,9 @@ import androidx.activity.ComponentActivity
 import androidx.core.app.ActivityCompat
 import com.everbravo.gestordetareas.persistence.dao.TaskDao
 import com.everbravo.gestordetareas.utils.SecuredPrefs
+import com.everbravo.gestordetareas.utils.ToastManager
+import com.everbravo.gestordetareas.utils.Validations
+import com.everbravo.gestordetareas.utils.enums.ValidationResult
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
@@ -41,7 +44,7 @@ class FormActivity : ComponentActivity() {
         val sharedPrefs = SecuredPrefs.getSecurePrefs(applicationContext)
         val loggedIn = sharedPrefs.getBoolean("isLoggedIn", false)
         if (!loggedIn) {
-            Toast.makeText(this, "No permitido", Toast.LENGTH_SHORT).show()
+            ToastManager.showMeAToast(this, ValidationResult.SESSION_ERROR)
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }
@@ -80,7 +83,7 @@ class FormActivity : ComponentActivity() {
 
     private fun requestLocationPermission() {
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 100)
-        Toast.makeText(this, "Permiso de ubicación requerido", Toast.LENGTH_SHORT).show()
+        ToastManager.showMeAToast(this, ValidationResult.LOCALIZATION_ERROR)
     }
 
     @SuppressLint("MissingPermission")
@@ -88,17 +91,20 @@ class FormActivity : ComponentActivity() {
         val name = etTaskName.text.toString()
         val description = etTaskDescription.text.toString()
 
+        if (!ToastManager.showMeAToast(this, Validations.validateEmpty(name))) return
+        if (!ToastManager.showMeAToast(this, Validations.validateEmpty(description))) return
+
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location: Location? ->
                 val latitude = location?.latitude ?: 0.0
                 val longitude = location?.longitude ?: 0.0
 
                 taskDao.insertTask(name, description, latitude, longitude)
-                Toast.makeText(this, "Tarea guardada con ubicación", Toast.LENGTH_SHORT).show()
+                ToastManager.showMeAToast(this, ValidationResult.TASK_SUCCESS)
                 finish()
             }
             .addOnFailureListener {
-                Toast.makeText(this, "Error al obtener ubicación", Toast.LENGTH_SHORT).show()
+                ToastManager.showMeAToast(this, ValidationResult.TASK_ERROR)
             }
     }
 

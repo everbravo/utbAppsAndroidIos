@@ -75,6 +75,7 @@ dependencies {
     implementation ("com.google.firebase:firebase-auth-ktx:22.3.1")
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("androidx.security:security-crypto:1.1.0-alpha03")
+    implementation("org.mindrot:jbcrypt:0.4")
 
 
 }

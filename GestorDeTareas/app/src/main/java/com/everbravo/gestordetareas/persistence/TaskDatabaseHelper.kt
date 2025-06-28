@@ -8,7 +8,7 @@ class TaskDatabaseHelper(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     override fun onCreate(db: SQLiteDatabase) {
-        val createTable = """
+        val createTableTask = """
             CREATE TABLE $TABLE_TASKS (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
@@ -17,11 +17,22 @@ class TaskDatabaseHelper(context: Context) :
                 longitude REAL
             )
         """.trimIndent()
-        db.execSQL(createTable)
+        val createTableUser = """
+            CREATE TABLE $TABLE_USERS (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name VARCHAR(100) NOT NULL,
+                username VARCHAR(70) NOT NULL,
+                password VARCHAR(300) NOT NULL,
+                active TINYINT
+            )
+        """.trimIndent()
+        db.execSQL(createTableTask)
+        db.execSQL(createTableUser)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS $TABLE_TASKS")
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_USERS")
         onCreate(db)
     }
 
@@ -29,5 +40,6 @@ class TaskDatabaseHelper(context: Context) :
         const val DATABASE_NAME = "task_manager.db"
         const val DATABASE_VERSION = 1
         const val TABLE_TASKS = "tasks"
+        const val TABLE_USERS = "user"
     }
 }
